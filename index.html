@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web QR Scanner</title>
+    <!-- Load the scanner library via public CDN -->
+    <script src="https://unpkg.com" type="text/javascript"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #reader { width: 100% !important; max-width: 500px; border: none !important; }
+        /* Hide default library text UI for a cleaner look */
+        #reader__dashboard, #reader__status_span { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="reader"></div>
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            // Sends the scanned text data straight back to your FlutterFlow WebView
+            window.parent.postMessage({ type: 'QR_SCAN_RESULT', data: decodedText }, '*');
+        }
+
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            /* verbose= */ false
+        );
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
