@@ -29,11 +29,11 @@
 <body>
 
     <h2>Scan QR Code</h2>
-    <div id="reader"></div>
+    <!-- Force iOS to render video elements inline rather than full-screen media players -->
+    <div id="reader" allow="camera; microphone"></div>
     <div id="result-box">No code detected yet</div>
 
     <script>
-        // We use checkLoop to wait precisely until the script is fully mounted in browser memory
         function initializeScanner() {
             const resultBox = document.getElementById('result-box');
             
@@ -45,7 +45,11 @@
                     { 
                         fps: 10, 
                         qrbox: { width: 250, height: 250 },
-                        rememberLastUsedCamera: true
+                        rememberLastUsedCamera: true,
+                        // CRITICAL FOR IOS: Tells WebKit to prioritize inline streams over hardware player overlays
+                        videoConstraints: {
+                            facingMode: "environment"
+                        }
                     },
                     /* verbose= */ false
                 );
@@ -59,12 +63,12 @@
                     (err) => {}
                 );
             } else {
-                console.log("Waiting for script assets to mount...");
-                setTimeout(initializeScanner, 250); // Re-try in a split second if loading slow
+                setTimeout(initializeScanner, 250);
             }
         }
 
         window.addEventListener('load', initializeScanner);
     </script>
 </body>
+
 </html>
