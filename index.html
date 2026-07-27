@@ -65,20 +65,28 @@
                     /* verbose= */ false
                 );
                 
-                html5QrcodeScanner.render(
-                    (decodedText) => {
-                        resultBox.style.display = "block";
-                        
-                        // Communicate with the parent tab that opened it
-                        if (window.opener) {
-                            window.opener.postMessage({ type: 'QR_SCAN_RESULT', data: decodedText }, '*');
-                        }
+            html5QrcodeScanner.render(
+                (decodedText) => {
+                    resultBox.style.display = "block";
+                    
+                    console.log("QR Code captured: ", decodedText);
+            
+                    if (window.opener) {
+                        // Force transmission across domains using the strict wildcard target '*'
+                        window.opener.postMessage({ type: 'QR_SCAN_RESULT', data: decodedText }, '*');
+                        console.log("Message successfully transmitted to opener window.");
+                    } else {
+                        console.error("Opener window link was broken or closed by the browser.");
+                    }
 
-                        // Close popup window after a brief delay
-                        setTimeout(() => { window.close(); }, 500);
-                    }, 
-                    (err) => { /* scanning framework updates */ }
-                );
+        // Give the browser slightly more time (800ms) to send the message before killing the tab
+        setTimeout(() => { 
+            window.close(); 
+        }, 800);
+    }, 
+    (err) => {}
+);
+
             } else {
                 // If CDN fails, display structural warning
                 scannerContainer.style.display = "none";
