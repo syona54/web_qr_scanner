@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web QR Scanner</title>
-    
-    <!-- FIXED: Using cdnjs version instead of unpkg to guarantee the script downloads perfectly -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
-    
+    <!-- Use the stable delivery CDN -->
+    <script src="https://cloudflare.com" type="text/javascript"></script>
     <style>
         body { 
             margin: 0; padding: 20px; background: #121212; color: #ffffff;
@@ -30,16 +28,13 @@
 
     <h2>Scan QR Code</h2>
     <div id="reader"></div>
-    <div id="result-box">No code detected yet</div>
+    <div id="result-box">Success! Returning to app...</div>
 
     <script>
-        // We use checkLoop to wait precisely until the script is fully mounted in browser memory
         function initializeScanner() {
             const resultBox = document.getElementById('result-box');
             
             if (typeof Html5QrcodeScanner !== 'undefined') {
-                console.log("Library loaded successfully via cdnjs!");
-                
                 const html5QrcodeScanner = new Html5QrcodeScanner(
                     "reader", 
                     { 
@@ -53,14 +48,21 @@
                 html5QrcodeScanner.render(
                     (decodedText) => {
                         resultBox.style.display = "block";
-                        resultBox.innerText = "Result: " + decodedText;
-                        window.parent.postMessage({ type: 'QR_SCAN_RESULT', data: decodedText }, '*');
+                        
+                        // CRITICAL CHANGE: Target 'window.opener' instead of 'window.parent'
+                        if (window.opener) {
+                            window.opener.postMessage({ type: 'QR_SCAN_RESULT', data: decodedText }, '*');
+                        }
+
+                        // Automatically close this scanner tab after half a second so the user jumps back to your app
+                        setTimeout(() => {
+                            window.close();
+                        }, 500);
                     }, 
                     (err) => {}
                 );
             } else {
-                console.log("Waiting for script assets to mount...");
-                setTimeout(initializeScanner, 250); // Re-try in a split second if loading slow
+                setTimeout(initializeScanner, 250);
             }
         }
 
