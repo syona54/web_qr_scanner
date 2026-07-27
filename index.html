@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web QR Scanner</title>
-    
-    <!-- FIXED: Using cdnjs version instead of unpkg to guarantee the script downloads perfectly -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
-    
+    <script src="https://cloudflare.com" type="text/javascript"></script>
     <style>
         body { 
             margin: 0; padding: 20px; background: #121212; color: #ffffff;
@@ -15,41 +12,36 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box;
         }
         h2 { margin-bottom: 15px; font-weight: 500; font-size: 1.2rem; text-align: center; }
-        #reader { 
-            width: 100%; max-width: 450px; background: #1e1e1e; 
-            border: 2px solid #333333 !important; border-radius: 12px; overflow: hidden;
+        #reader { width: 100%; max-width: 450px; background: #1e1e1e; border-radius: 12px; overflow: hidden; border: 2px solid #333 !important; }
+        button {
+            background-color: #007aff !important; color: white !important; border: none !important;
+            padding: 12px 24px !important; font-size: 15px !important; border-radius: 8px !important;
+            cursor: pointer !important; margin: 15px auto !important; display: block !important; font-weight: bold;
         }
-        #result-box {
-            margin-top: 20px; padding: 12px; width: 100%; max-width: 450px;
-            background: #2a2a2a; border-radius: 8px; text-align: center;
-            font-size: 14px; border: 1px solid #444; word-break: break-all; display: none;
-        }
+        #result-box { margin-top: 20px; padding: 12px; width: 100%; max-width: 450px; background: #2a2a2a; border-radius: 8px; text-align: center; display: none; }
     </style>
 </head>
 <body>
 
     <h2>Scan QR Code</h2>
-    <!-- Force iOS to render video elements inline rather than full-screen media players -->
-    <div id="reader" allow="camera; microphone"></div>
-    <div id="result-box">No code detected yet</div>
+    <div id="reader"></div>
+    <div id="result-box">Processing...</div>
 
     <script>
         function initializeScanner() {
             const resultBox = document.getElementById('result-box');
             
             if (typeof Html5QrcodeScanner !== 'undefined') {
-                console.log("Library loaded successfully via cdnjs!");
-                
                 const html5QrcodeScanner = new Html5QrcodeScanner(
                     "reader", 
                     { 
                         fps: 10, 
                         qrbox: { width: 250, height: 250 },
-                        rememberLastUsedCamera: true,
-                        // CRITICAL FOR IOS: Tells WebKit to prioritize inline streams over hardware player overlays
-                        videoConstraints: {
-                            facingMode: "environment"
-                        }
+                        // FORCE both options: Camera stream for Desktop/Android, Image file for iOS fallback
+                        supportedScanTypes: [
+                            Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+                            Html5QrcodeScanType.SCAN_TYPE_FILE
+                        ]
                     },
                     /* verbose= */ false
                 );
@@ -57,7 +49,7 @@
                 html5QrcodeScanner.render(
                     (decodedText) => {
                         resultBox.style.display = "block";
-                        resultBox.innerText = "Result: " + decodedText;
+                        resultBox.innerText = "Scanned: " + decodedText;
                         window.parent.postMessage({ type: 'QR_SCAN_RESULT', data: decodedText }, '*');
                     }, 
                     (err) => {}
@@ -66,9 +58,7 @@
                 setTimeout(initializeScanner, 250);
             }
         }
-
         window.addEventListener('load', initializeScanner);
     </script>
 </body>
-
 </html>
